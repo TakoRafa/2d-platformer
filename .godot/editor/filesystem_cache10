@@ -1,15 +1,14 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1777634678
-icon.svg::CompressedTexture2D::2973410020260985831::1777307245::1777322339::1::::<><><>0<>0<>03f891dcb0086fc12da4f4830cf8aa53<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-images.png::CompressedTexture2D::2288361678242977087::1777307245::1777322339::1::::<><><>0<>0<>1c23393a2248e1d5f565093033ba691b<>res://.godot/imported/images.png-b603883770f213c0c175102e3045df3b.ctex::
-player (Copiar 2).tscn::PackedScene::6350092514571123523::1777567271::0::1::::<><><>0<>0<><>::uid://7uq8n1pixx3t::::res://images.png<>uid://cuaeve0hs3fet::::res://Playersheet.png
+::res://::1777637757
+icon.svg::CompressedTexture2D::2973410020260985831::1777307245::1777634941::1::::<><><>0<>0<>03f891dcb0086fc12da4f4830cf8aa53<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+player (Copiar 2).tscn::PackedScene::6350092514571123523::1777637626::0::1::::<><><>0<>0<><>::uid://b4tqnvchfbqbd::::res://Player.png<>uid://cuaeve0hs3fet::::res://Playersheet.png
 player (Copiar).tscn::PackedScene::2481558421142035687::1777307245::0::1::::<><><>0<>0<><>::uid://7uq8n1pixx3t::::res://images.png
 player.gd::GDScript::559689032042139886::1777307245::0::1::::<>CharacterBody2D<><>0<>0<><>::
 player.tscn::PackedScene::753175026723952350::1777307245::0::1::::<><><>0<>0<><>::uid://h8d85b2671hi::::res://player.gd<>uid://7uq8n1pixx3t::::res://images.png
-Playersheet.png::CompressedTexture2D::6176898858846637903::1777562491::1777562501::1::::<><><>0<>0<>33deeccde4edffe4122f3cc0975b3707<>res://.godot/imported/Playersheet.png-3dd6ea0f1241e4aa0aedb53fb1b322eb.ctex::
+Playersheet.png::CompressedTexture2D::6176898858846637903::1777637741::1777637759::1::::<><><>0<>0<>33deeccde4edffe4122f3cc0975b3707<>res://.godot/imported/Playersheet.png-3dd6ea0f1241e4aa0aedb53fb1b322eb.ctex::
 tilesheet_complete.png::CompressedTexture2D::2596216905493850545::1777307245::1777322340::1::::<><><>0<>0<>641b4c17bfbfacb9963bcf8e4267c345<>res://.godot/imported/tilesheet_complete.png-5f93f3c22ca1735fc3b12890d7b0f5cb.ctex::
 tile_map_layer.tscn::PackedScene::7552665903808378526::1777307245::0::1::::<><><>0<>0<><>::uid://bc8vkv76pxwnx::::res://tilesheet_complete.png
-world.tscn::PackedScene::5255017885105921678::1777567255::0::1::::<><><>0<>0<><>::uid://dfutklnr8hr6u::::res://tile_map_layer.tscn<>uid://cwqbdi6n6ycx4::::res://player (Copiar 2).tscn
+world.tscn::PackedScene::5255017885105921678::1777636143::0::1::::<><><>0<>0<><>::uid://dfutklnr8hr6u::::res://tile_map_layer.tscn<>uid://cwqbdi6n6ycx4::::res://player (Copiar 2).tscn
 ::res://addons/::1777307244
 ::res://addons/limboai/::1777307245
 LICENSE.md::TextFile::-1::1777307244::0::1::::<><><>0<>0<><>::

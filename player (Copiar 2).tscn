@@ -66,12 +66,12 @@ func initiate_state_machine():
 func idle_start():
 	$AnimatedSprite2D.play(\"IDLE\")
 	dashacc = 1
-	print(\"idle start\")
+	#print(\"idle start\")
 	can_switch_gravity = true
 	can_dash = true
 	
 func idle_update(_delta: float):
-	print(\"idle update\")
+	#print(\"idle update\")
 	if Input.is_action_just_pressed(\"gravity\") and can_switch_gravity == true:
 		statem.dispatch(&\"to_gravity_switch\")
 	if Input.is_action_just_pressed(\"ui_accept\"):
@@ -85,18 +85,30 @@ func idle_update(_delta: float):
 
 func jump_start():
 	$AnimatedSprite2D.play(\"JUMP\")
-	print(\"jump start\")
+	#print(\"jump start\")
 	jumping = true
 	velocity.y = JUMP_SPEED * gravitydir
 	high_jump = 3
 	low_jump_buffer = 0.04
 	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+	##############Joystick correction##############
+	if direction > 0.1:
+		direction = 1
+	elif direction < -0.1:
+		direction = -1
+	##############Joystick correction#################
 	last_dir = direction
 	
 	
 func jump_update(delta):
-	print(\"jump update\")
+	#print(\"jump update\")
 	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+	##############Joystick correction##############
+	if direction > 0.1:
+		direction = 1
+	elif direction < -0.1:
+		direction = -1
+	##############Joystick correction#################
 	if direction != last_dir:
 		dashacc = 1
 	velocity.y = move_toward(velocity.y, 0, 25)
@@ -121,16 +133,22 @@ func jump_update(delta):
 
 func fall_start():
 	$AnimatedSprite2D.play(\"FALL\")
-	print(\"fall start\")
+	#print(\"fall start\")
 
 func fall_update(delta: float):
-	print(\"fall update\")
+	#print(\"fall update\")
 	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+	##############Joystick correction##############
+	if direction > 0.1:
+		direction = 1
+	elif direction < -0.1:
+		direction = -1
+	##############Joystick correction#################
 	if direction != last_dir:
 		dashacc = 1
 	if velocity.x == 0:
 		dashacc = 1
-	velocity += get_gravity() * delta * gravitydir
+	velocity += get_gravity() * delta* gravitydir
 	if Input.is_action_just_pressed(\"gravity\") and can_switch_gravity == true:
 		statem.dispatch(&\"to_gravity_switch\")
 	if (gravitydir == 1 and is_on_floor()) or (gravitydir == -1 and is_on_ceiling()):
@@ -143,21 +161,21 @@ func gravity_switch_start():
 		$AnimatedSprite2D.flip_v = false
 	else:
 		$AnimatedSprite2D.flip_v = true 
-	print(\"gravity switch start\")
+	#print(\"gravity switch start\")
 	gravitydir = -gravitydir
 	can_switch_gravity = false
 	
 func gravity_switch_update(_delta: float):
-	print(\"gravity switch update\")
+	#print(\"gravity switch update\")
 	statem.dispatch(&\"to_fall\")
 
 
 func walk_start():
 	$AnimatedSprite2D.play(\"WALK\")
-	print(\"walk start\")
+	#print(\"walk start\")
 	
 func walk_update(_delta: float):
-	print(\"walk update\")
+	#print(\"walk update\")
 	if Input.is_action_just_pressed(\"ui_accept\"):
 		statem.dispatch(&\"to_jump\")
 	if Input.is_action_just_pressed(\"gravity\") and can_switch_gravity == true:
@@ -172,7 +190,9 @@ func walk_update(_delta: float):
 
 func dash_start():
 	$AnimatedSprite2D.play(\"DASH\")
-	print(\"dash_start\")
+	$CollisionShape2D.disabled = true
+	$Dashcollision.disabled = false
+	#print(\"dash_start\")
 	velocity.x = 0
 	velocity.y = 0
 	dashacc = 2
@@ -180,6 +200,17 @@ func dash_start():
 	dashtime = 0.15
 	var directionx := Input.get_axis(\"ui_left\", \"ui_right\")
 	var directiony := Input.get_axis(\"ui_up\", \"ui_down\")
+		##############Joystick correction###########
+	if directionx > 0.1:
+		directionx = 1
+	elif directionx < -0.1:
+		directionx = -1
+	if directiony > 0.1:
+		directiony = 1
+	elif directiony < -0.1:
+		directiony = -1
+	##############Joystick correction###########
+
 	dash_vert_dir = directiony
 	if directionx or directiony:
 		velocity = Vector2(directionx, directiony).normalized() * SPEED * DASH_SPEED
@@ -189,13 +220,14 @@ func dash_start():
 	can_dash = false
 	
 func dash_update(delta: float):
-	print(\"dash_update\")
-	print(velocity)
+	#print(\"dash_update\")
 	if is_on_wall() and velocity.y != (SPEED*DASH_SPEED*dash_vert_dir):
 		velocity.x = 0
 		velocity.y = 0
 		dashing = false
 		dashacc = 1
+		$CollisionShape2D.disabled = false
+		$Dashcollision.disabled = true
 		statem.dispatch(&\"to_fall\")
 	if dashtime >0:
 		dashtime -= delta
@@ -203,28 +235,40 @@ func dash_update(delta: float):
 		dashing = false
 		dashacc = 1.1
 		velocity.y = 0
+		$CollisionShape2D.disabled = false
+		$Dashcollision.disabled = true
 		statem.dispatch(&\"to_fall\")
 	move_and_slide()
 	if Input.is_action_just_pressed(\"ui_accept\") and ((is_on_floor() and gravitydir == 1)or(is_on_ceiling() and gravitydir == -1)):
 		dashing = false
+		can_dash = true
+		$CollisionShape2D.disabled = false
+		$Dashcollision.disabled = true
 		statem.dispatch(&\"to_jump\")
 
 
 
 
 func _physics_process(delta):
+	print(velocity)
 	if dashing == false:
 		var direction := Input.get_axis(\"ui_left\", \"ui_right\")
-		if direction == 1:
+		##############Joystick correction###########
+		if direction > 0.1:
+			direction = 1
+		elif direction < -0.1:
+			direction = -1
+		##############Joystick correction###########
+		if direction > 0:
 			$AnimatedSprite2D.flip_h = false
-		if direction == -1:
+		elif direction < 0:
 			$AnimatedSprite2D.flip_h = true
 		if direction != 0:
 			last_dir = direction
 			lastdir_dash = direction
 		if dashacc > 1:
-			dashacc = dashacc - delta
-			velocity.x = move_toward(velocity.x, direction*SPEED, delta/7)
+			dashacc = dashacc - delta/10
+			velocity.x = move_toward(velocity.x, direction*SPEED, delta/100000)
 		else:
 			dashacc = 1
 		if direction:
@@ -234,10 +278,7 @@ func _physics_process(delta):
 		move_and_slide()
 "
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_i3pqv"]
-size = Vector2(64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_7huqt"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_nledv"]
 atlas = ExtResource("2_vjq2c")
 region = Rect2(128, 128, 64, 64)
 
@@ -277,7 +318,7 @@ region = Rect2(0, 0, 64, 64)
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_7huqt")
+"texture": SubResource("AtlasTexture_nledv")
 }],
 "loop": true,
 "name": &"DASH",
@@ -328,19 +369,34 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nledv"]
+size = Vector2(62, 63)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vjq2c"]
+size = Vector2(62, 55)
+
 [node name="Player" type="CharacterBody2D" unique_id=195148628]
 script = SubResource("GDScript_onrkg")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=623360524]
-position = Vector2(32, -32)
-shape = SubResource("RectangleShape2D_i3pqv")
-
 [node name="Camera2D" type="Camera2D" parent="." unique_id=417401155]
 visible = false
+position = Vector2(32, -32)
+zoom = Vector2(0.75, 0.75)
+process_callback = 0
+limit_enabled = false
 position_smoothing_enabled = true
-position_smoothing_speed = 10.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1285437705]
 position = Vector2(32, -32)
 sprite_frames = SubResource("SpriteFrames_ya17s")
-animation = &"JUMP"
+animation = &"DASH"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1770338314]
+position = Vector2(32, -32)
+shape = SubResource("RectangleShape2D_nledv")
+
+[node name="Dashcollision" type="CollisionShape2D" parent="." unique_id=281526594]
+position = Vector2(32, -28)
+shape = SubResource("RectangleShape2D_vjq2c")
+disabled = true
+debug_color = Color(0.8690312, 0.00052539527, 0.85406727, 0.41960785)
