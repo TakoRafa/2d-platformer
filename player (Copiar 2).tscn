@@ -1,6 +1,5 @@
 [gd_scene format=3 uid="uid://cwqbdi6n6ycx4"]
 
-[ext_resource type="Texture2D" uid="uid://7uq8n1pixx3t" path="res://images.png" id="1_4flbx"]
 [ext_resource type="Texture2D" uid="uid://cuaeve0hs3fet" path="res://Playersheet.png" id="2_vjq2c"]
 
 [sub_resource type="GDScript" id="GDScript_onrkg"]
@@ -331,12 +330,6 @@ animations = [{
 
 [node name="Player" type="CharacterBody2D" unique_id=195148628]
 script = SubResource("GDScript_onrkg")
-
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1399369033]
-visible = false
-position = Vector2(32, -32)
-scale = Vector2(0.24710424, 0.32989693)
-texture = ExtResource("1_4flbx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=623360524]
 position = Vector2(32, -32)
