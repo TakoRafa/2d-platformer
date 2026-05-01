@@ -1,0 +1,109 @@
+[gd_scene format=3 uid="uid://bbmc5002vu50n"]
+
+[ext_resource type="Texture2D" uid="uid://7uq8n1pixx3t" path="res://images.png" id="1_4flbx"]
+
+[sub_resource type="GDScript" id="GDScript_onrkg"]
+script/source = "extends CharacterBody2D
+
+
+var SPEED = 300.0
+const JUMP_VELOCITY = -400.0
+var gravitydir = 1 #direction of gravity 1=downwards, -1=upwards
+var dashtime = false #dictates when on dash
+var dashrep = 10 #amount of times dash() is done 
+var keepdirdash = true #used to keep and check direction in the middle of the dash
+var directiondashx = 0.1 #used to store dash direction.x 0.1 is just a dummy value
+var directiondashy = 0.1 #used to store dash direction.y 0.1 is just a dummy value
+var candash = true
+
+func _physics_process(delta):
+	if dashtime == false:
+		if not is_on_floor():
+			gravity(delta)
+			
+		if Input.is_action_just_pressed(\"ui_accept\") and is_on_floor() and gravitydir == 1:
+			velocity.y = JUMP_VELOCITY
+			
+		if Input.is_action_just_pressed(\"ui_accept\") and is_on_ceiling() and gravitydir == -1:
+			velocity.y = -JUMP_VELOCITY
+			
+		if Input.is_action_just_pressed(\"gravity\"):
+			gravitydir = gravitydir * -1
+			gravity(delta)
+			
+		var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+		if direction:
+			velocity.x = direction * SPEED
+		else:
+			velocity.x = move_toward(velocity.x, 0, SPEED)
+			
+		if Input.is_action_just_pressed(\"dash\"):
+			if candash == true:
+				dashrep = 10
+				var directionx := Input.get_axis(\"ui_left\", \"ui_right\")
+				var directiony := Input.get_axis(\"ui_up\", \"ui_down\")
+				candash = false
+				dash(directionx, directiony)
+		move_and_slide()
+		if is_on_floor() and gravitydir == 1:
+			candash = true
+		if is_on_ceiling() and gravitydir == -1:
+			candash = true
+		
+
+
+func gravity(delta):
+	velocity += get_gravity() * delta * gravitydir
+
+func _on_timer_timeout():
+	if dashrep > 0:
+		keepdirdash = false
+		var directionx := Input.get_axis(\"ui_left\", \"ui_right\")
+		var directiony := Input.get_axis(\"ui_up\", \"ui_down\")
+		dash(directionx, directiony)
+	else:
+		dashtime = false
+		keepdirdash = true
+ 
+func dash(directionx, directiony):
+	dashtime = true
+	$Timer.start()
+	if keepdirdash == false:
+		directiony = directiondashy
+		directionx = directiondashx
+	else:
+		directiondashx = directionx
+		directiondashy = directiony
+		
+	if directionx and directiony:
+		move_and_collide(Vector2(directionx*15/sqrt(2), directiony*15/sqrt(2)))
+		
+	else:
+		move_and_collide(Vector2(directionx*15, directiony*15))
+		
+	dashrep = dashrep -1
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_i3pqv"]
+size = Vector2(64, 64)
+
+[node name="CharacterBody2D" type="CharacterBody2D" unique_id=195148628]
+script = SubResource("GDScript_onrkg")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1399369033]
+position = Vector2(32, -32)
+scale = Vector2(0.24710424, 0.32989693)
+texture = ExtResource("1_4flbx")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=623360524]
+position = Vector2(32, -32)
+shape = SubResource("RectangleShape2D_i3pqv")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=417401155]
+position_smoothing_enabled = true
+
+[node name="Timer" type="Timer" parent="." unique_id=751744322]
+process_callback = 0
+wait_time = 0.03
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

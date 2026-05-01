@@ -1,0 +1,353 @@
+[gd_scene format=3 uid="uid://cwqbdi6n6ycx4"]
+
+[ext_resource type="Texture2D" uid="uid://7uq8n1pixx3t" path="res://images.png" id="1_4flbx"]
+[ext_resource type="Texture2D" uid="uid://cuaeve0hs3fet" path="res://Playersheet.png" id="2_vjq2c"]
+
+[sub_resource type="GDScript" id="GDScript_onrkg"]
+script/source = "extends CharacterBody2D
+
+var statem: LimboHSM #Defines the variable as a limbohsm type (needed for state machine)
+
+
+const JUMP_SPEED = -450
+var high_jump = 3
+var low_jump_buffer
+const SPEED = 350
+const DASH_SPEED = 3.5
+var gravitydir = 1 #direction of gravity 1=downwards, -1=upwards
+var can_switch_gravity = true
+var can_dash = true
+var dashing = false
+var dashacc = 1 #used to preserve some of the speed in the dash while in the air
+var dashtime #used for the amount of time you are in the dash
+var last_dir = 1
+var lastdir_dash = 1
+var dash_vert_dir
+var jumping = false
+
+func _ready():
+	initiate_state_machine() #Calls the function to start the state machine
+
+func initiate_state_machine():
+	statem = LimboHSM.new() #Creates state machine
+	add_child(statem) #adds the state machine to the scene
+	
+	#used to create states
+	#var statename = LimboState.new().named(\"name\").call_on_enter(NameOfFunction).call_on_update(NameOfFunction)
+	var idle_state = LimboState.new().named(\"idle\").call_on_enter(idle_start).call_on_update(idle_update)
+	var jump_state = LimboState.new().named(\"jump\").call_on_enter(jump_start).call_on_update(jump_update)
+	var fall_state = LimboState.new().named(\"fall\").call_on_enter(fall_start).call_on_update(fall_update)
+	var gravity_switch_state = LimboState.new().named(\"gravity_switch\").call_on_enter(gravity_switch_start).call_on_update(gravity_switch_update)
+	var walk_state = LimboState.new().named(\"walk\").call_on_enter(walk_start).call_on_update(walk_update)
+	var dash_state = LimboState.new().named(\"dash\").call_on_enter(dash_start).call_on_update(dash_update)
+	
+	
+	#adds the state to the state machine
+	statem.add_child(idle_state)
+	statem.add_child(jump_state)
+	statem.add_child(fall_state)
+	statem.add_child(gravity_switch_state)
+	statem.add_child(walk_state)
+	statem.add_child(dash_state)
+	
+	statem.initial_state = fall_state
+	
+	#creates transitions from state to state
+	#statemachine.add_transition(fromstate, tostate, &\"signal\")
+	statem.add_transition(idle_state, walk_state, &\"to_walk\")
+	statem.add_transition(statem.ANYSTATE, idle_state, &\"to_idle\")
+	statem.add_transition(statem.ANYSTATE, fall_state, &\"to_fall\")
+	statem.add_transition(statem.ANYSTATE, jump_state, &\"to_jump\")
+	statem.add_transition(statem.ANYSTATE, gravity_switch_state, &\"to_gravity_switch\")
+	statem.add_transition(statem.ANYSTATE, dash_state, &\"to_dash\")
+	
+	statem.initialize(self)
+	statem.set_active(true)
+
+func idle_start():
+	$AnimatedSprite2D.play(\"IDLE\")
+	dashacc = 1
+	print(\"idle start\")
+	can_switch_gravity = true
+	can_dash = true
+	
+func idle_update(_delta: float):
+	print(\"idle update\")
+	if Input.is_action_just_pressed(\"gravity\") and can_switch_gravity == true:
+		statem.dispatch(&\"to_gravity_switch\")
+	if Input.is_action_just_pressed(\"ui_accept\"):
+		statem.dispatch(&\"to_jump\")
+	if Input.is_action_just_pressed(\"dash\") and can_dash == true:
+		statem.dispatch(&\"to_dash\")
+	if velocity.x != 0:
+		statem.dispatch(&\"to_walk\")
+	
+
+
+func jump_start():
+	$AnimatedSprite2D.play(\"JUMP\")
+	print(\"jump start\")
+	jumping = true
+	velocity.y = JUMP_SPEED * gravitydir
+	high_jump = 3
+	low_jump_buffer = 0.04
+	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+	last_dir = direction
+	
+	
+func jump_update(delta):
+	print(\"jump update\")
+	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+	if direction != last_dir:
+		dashacc = 1
+	velocity.y = move_toward(velocity.y, 0, 25)
+
+	if velocity.y == 0:
+		jumping = false
+		statem.dispatch(&\"to_fall\")
+	if Input.is_action_just_pressed(\"gravity\") and can_switch_gravity == true:
+		jumping = false
+		statem.dispatch(&\"to_gravity_switch\")
+	if Input.is_action_just_pressed(\"dash\") and can_dash == true:
+		jumping = false
+		statem.dispatch(&\"to_dash\")
+	if Input.is_action_pressed(\"ui_accept\") and high_jump > 0 and low_jump_buffer <0:
+		velocity.y = move_toward(velocity.y, -gravitydir*1000, 100)
+		high_jump -= 1
+	if Input.is_action_just_released(\"ui_accept\"):
+		high_jump = 0
+		
+	low_jump_buffer -= delta
+
+
+func fall_start():
+	$AnimatedSprite2D.play(\"FALL\")
+	print(\"fall start\")
+
+func fall_update(delta: float):
+	print(\"fall update\")
+	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+	if direction != last_dir:
+		dashacc = 1
+	if velocity.x == 0:
+		dashacc = 1
+	velocity += get_gravity() * delta * gravitydir
+	if Input.is_action_just_pressed(\"gravity\") and can_switch_gravity == true:
+		statem.dispatch(&\"to_gravity_switch\")
+	if (gravitydir == 1 and is_on_floor()) or (gravitydir == -1 and is_on_ceiling()):
+		statem.dispatch(&\"to_idle\")
+	if Input.is_action_just_pressed(\"dash\") and can_dash == true:
+		statem.dispatch(&\"to_dash\")
+
+func gravity_switch_start():
+	if $AnimatedSprite2D.flip_v:
+		$AnimatedSprite2D.flip_v = false
+	else:
+		$AnimatedSprite2D.flip_v = true 
+	print(\"gravity switch start\")
+	gravitydir = -gravitydir
+	can_switch_gravity = false
+	
+func gravity_switch_update(_delta: float):
+	print(\"gravity switch update\")
+	statem.dispatch(&\"to_fall\")
+
+
+func walk_start():
+	$AnimatedSprite2D.play(\"WALK\")
+	print(\"walk start\")
+	
+func walk_update(_delta: float):
+	print(\"walk update\")
+	if Input.is_action_just_pressed(\"ui_accept\"):
+		statem.dispatch(&\"to_jump\")
+	if Input.is_action_just_pressed(\"gravity\") and can_switch_gravity == true:
+		statem.dispatch(&\"to_gravity_switch\")
+	if Input.is_action_just_pressed(\"dash\") and can_dash == true:
+		statem.dispatch(&\"to_dash\")
+	if (gravitydir == 1 and not is_on_floor()) or (gravitydir == -1 and not is_on_ceiling()):
+		statem.dispatch(&\"to_fall\")
+	if velocity.x == 0:
+		statem.dispatch(&\"to_idle\")
+
+
+func dash_start():
+	$AnimatedSprite2D.play(\"DASH\")
+	print(\"dash_start\")
+	velocity.x = 0
+	velocity.y = 0
+	dashacc = 2
+	dashing = true
+	dashtime = 0.15
+	var directionx := Input.get_axis(\"ui_left\", \"ui_right\")
+	var directiony := Input.get_axis(\"ui_up\", \"ui_down\")
+	dash_vert_dir = directiony
+	if directionx or directiony:
+		velocity = Vector2(directionx, directiony).normalized() * SPEED * DASH_SPEED
+	else:
+		velocity.x = lastdir_dash * SPEED * DASH_SPEED
+	move_and_slide()
+	can_dash = false
+	
+func dash_update(delta: float):
+	print(\"dash_update\")
+	print(velocity)
+	if is_on_wall() and velocity.y != (SPEED*DASH_SPEED*dash_vert_dir):
+		velocity.x = 0
+		velocity.y = 0
+		dashing = false
+		dashacc = 1
+		statem.dispatch(&\"to_fall\")
+	if dashtime >0:
+		dashtime -= delta
+	else:
+		dashing = false
+		dashacc = 1.1
+		velocity.y = 0
+		statem.dispatch(&\"to_fall\")
+	move_and_slide()
+	if Input.is_action_just_pressed(\"ui_accept\") and ((is_on_floor() and gravitydir == 1)or(is_on_ceiling() and gravitydir == -1)):
+		dashing = false
+		statem.dispatch(&\"to_jump\")
+
+
+
+
+func _physics_process(delta):
+	if dashing == false:
+		var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+		if direction == 1:
+			$AnimatedSprite2D.flip_h = false
+		if direction == -1:
+			$AnimatedSprite2D.flip_h = true
+		if direction != 0:
+			last_dir = direction
+			lastdir_dash = direction
+		if dashacc > 1:
+			dashacc = dashacc - delta
+			velocity.x = move_toward(velocity.x, direction*SPEED, delta/7)
+		else:
+			dashacc = 1
+		if direction:
+			velocity.x = direction * SPEED * dashacc
+		else:
+			velocity.x = move_toward(velocity.x, 0, SPEED)
+		move_and_slide()
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_i3pqv"]
+size = Vector2(64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7huqt"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(128, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tva5w"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(128, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5yck6"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(0, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ya17s"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(64, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h5634"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ibm8o"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_t0l4u"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mxiih"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vjq2c"]
+atlas = ExtResource("2_vjq2c")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ya17s"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7huqt")
+}],
+"loop": true,
+"name": &"DASH",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tva5w")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5yck6")
+}, {
+"duration": 100000000.0,
+"texture": SubResource("AtlasTexture_ya17s")
+}],
+"loop": true,
+"name": &"FALL",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h5634")
+}],
+"loop": true,
+"name": &"IDLE",
+"speed": 16.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ibm8o")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t0l4u")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mxiih")
+}, {
+"duration": 10000.0,
+"texture": SubResource("AtlasTexture_vjq2c")
+}],
+"loop": true,
+"name": &"JUMP",
+"speed": 16.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"WALK",
+"speed": 5.0
+}]
+
+[node name="Player" type="CharacterBody2D" unique_id=195148628]
+script = SubResource("GDScript_onrkg")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1399369033]
+visible = false
+position = Vector2(32, -32)
+scale = Vector2(0.24710424, 0.32989693)
+texture = ExtResource("1_4flbx")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=623360524]
+position = Vector2(32, -32)
+shape = SubResource("RectangleShape2D_i3pqv")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=417401155]
+visible = false
+position_smoothing_enabled = true
+position_smoothing_speed = 10.0
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1285437705]
+position = Vector2(32, -32)
+sprite_frames = SubResource("SpriteFrames_ya17s")
+animation = &"JUMP"

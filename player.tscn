@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://ky3xhe4vojry"]
+
+[ext_resource type="Script" uid="uid://h8d85b2671hi" path="res://player.gd" id="1_qok78"]
+[ext_resource type="Texture2D" uid="uid://7uq8n1pixx3t" path="res://images.png" id="2_4qixi"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_elhmy"]
+size = Vector2(64, 64)
+
+[node name="Player" type="CharacterBody2D" unique_id=377442045]
+script = ExtResource("1_qok78")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1647612121]
+position = Vector2(32, -32)
+scale = Vector2(0.247104, 0.329897)
+texture = ExtResource("2_4qixi")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1878741704]
+position = Vector2(32, -32)
+shape = SubResource("RectangleShape2D_elhmy")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1278996807]
+process_callback = 0
+position_smoothing_enabled = true
+
+[node name="Dash gravity timer" type="Timer" parent="." unique_id=1916986930]
+process_callback = 0
+wait_time = 0.1
+
+[connection signal="timeout" from="Dash gravity timer" to="." method="_on_dash_gravity_timer_timeout"]
