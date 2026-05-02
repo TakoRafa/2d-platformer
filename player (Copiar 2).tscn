@@ -7,25 +7,49 @@ script/source = "extends CharacterBody2D
 
 var statem: LimboHSM #Defines the variable as a limbohsm type (needed for state machine)
 
-
-const JUMP_SPEED = -450
-var high_jump = 3
-var low_jump_buffer
+###CONSTANTS AND GLOBAL VARIABLES###
 const SPEED = 350
 const DASH_SPEED = 3.5
+const JUMP_SPEED = -450
+var last_dir = 1
+###CONSTANTS AND GLOBAL VARIABLES###
+
+###JUMP VARIABLES###
+var high_jump = 3
+var low_jump_buffer
+var jumping = false
+###JUMP VARIABLES###
+
+###GRAVITY VARIABLES###
 var gravitydir = 1 #direction of gravity 1=downwards, -1=upwards
 var can_switch_gravity = true
+###GRAVITY VARIABLES###
+
+###DASH VARIABLES###
 var can_dash = true
 var dashing = false
 var dashacc = 1 #used to preserve some of the speed in the dash while in the air
 var dashtime #used for the amount of time you are in the dash
-var last_dir = 1
 var lastdir_dash = 1
 var dash_vert_dir
-var jumping = false
+###DASH VARIABLES###
+
+###CAMERA VARIABLES###
+var zoom_default = 1.0
+var zoom_min = 0.50
+var zoom_max = 1.0
+var zoom_speed_threshold = 1050.0
+var zoom_speed_max = 1050.0
+var zoom_lerp_speed = 3.0
+var target_zoom = 1.0
+@onready var camera = $Camera2D
+###CAMERA VARIABLES###
 
 func _ready():
 	initiate_state_machine() #Calls the function to start the state machine
+	camera.zoom = Vector2.ONE * zoom_default
+	target_zoom = zoom_default
+	
 
 func initiate_state_machine():
 	statem = LimboHSM.new() #Creates state machine
@@ -191,7 +215,10 @@ func walk_update(_delta: float):
 func dash_start():
 	$AnimatedSprite2D.play(\"DASH\")
 	$CollisionShape2D.disabled = true
-	$Dashcollision.disabled = false
+	if gravitydir == 1:
+		$DashCollisionNormalGravity.disabled = false
+	else:
+		$DashcollisionChangedGravity.disabled = false
 	#print(\"dash_start\")
 	velocity.x = 0
 	velocity.y = 0
@@ -227,7 +254,8 @@ func dash_update(delta: float):
 		dashing = false
 		dashacc = 1
 		$CollisionShape2D.disabled = false
-		$Dashcollision.disabled = true
+		$DashCollisionNormalGravity.disabled = true
+		$DashcollisionChangedGravity.disabled = true
 		statem.dispatch(&\"to_fall\")
 	if dashtime >0:
 		dashtime -= delta
@@ -236,14 +264,16 @@ func dash_update(delta: float):
 		dashacc = 1.1
 		velocity.y = 0
 		$CollisionShape2D.disabled = false
-		$Dashcollision.disabled = true
+		$DashCollisionNormalGravity.disabled = true
+		$DashcollisionChangedGravity.disabled = true
 		statem.dispatch(&\"to_fall\")
 	move_and_slide()
 	if Input.is_action_just_pressed(\"ui_accept\") and ((is_on_floor() and gravitydir == 1)or(is_on_ceiling() and gravitydir == -1)):
 		dashing = false
 		can_dash = true
 		$CollisionShape2D.disabled = false
-		$Dashcollision.disabled = true
+		$DashcollisionChangedGravity.disabled = true
+		$DashCollisionNormalGravity.disabled = true
 		statem.dispatch(&\"to_jump\")
 
 
@@ -251,6 +281,22 @@ func dash_update(delta: float):
 
 func _physics_process(delta):
 	print(velocity)
+	_update_camera(delta)
+	_not_dashing(delta)
+
+func _update_camera(delta):
+	var current_speed = velocity.length()
+	if current_speed <= zoom_speed_threshold:
+		target_zoom = zoom_default
+	else:
+		var zoom_blend_factor = clampf((current_speed - zoom_speed_threshold) / (zoom_speed_max - zoom_speed_threshold),0.0, 1.0)
+		zoom_blend_factor = 1.0 - pow(1.0 - zoom_blend_factor, 2.0)
+		target_zoom = lerpf(zoom_default, zoom_min, zoom_blend_factor)
+	target_zoom = clampf(target_zoom, zoom_min, zoom_max)
+	var new_zoom = lerpf(camera.zoom.x, target_zoom, zoom_lerp_speed * delta)
+	camera.zoom = Vector2.ONE * new_zoom
+
+func _not_dashing(delta):
 	if dashing == false:
 		var direction := Input.get_axis(\"ui_left\", \"ui_right\")
 		##############Joystick correction###########
@@ -395,8 +441,14 @@ animation = &"DASH"
 position = Vector2(32, -32)
 shape = SubResource("RectangleShape2D_nledv")
 
-[node name="Dashcollision" type="CollisionShape2D" parent="." unique_id=281526594]
+[node name="DashCollisionNormalGravity" type="CollisionShape2D" parent="." unique_id=281526594]
 position = Vector2(32, -28)
+shape = SubResource("RectangleShape2D_vjq2c")
+disabled = true
+debug_color = Color(0.8690312, 0.00052539527, 0.85406727, 0.41960785)
+
+[node name="DashcollisionChangedGravity" type="CollisionShape2D" parent="." unique_id=1227348346]
+position = Vector2(32, -36)
 shape = SubResource("RectangleShape2D_vjq2c")
 disabled = true
 debug_color = Color(0.8690312, 0.00052539527, 0.85406727, 0.41960785)

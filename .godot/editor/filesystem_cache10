@@ -1,7 +1,7 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1777637757
+::res://::1777749342
 icon.svg::CompressedTexture2D::2973410020260985831::1777307245::1777634941::1::::<><><>0<>0<>03f891dcb0086fc12da4f4830cf8aa53<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-player (Copiar 2).tscn::PackedScene::6350092514571123523::1777637626::0::1::::<><><>0<>0<><>::uid://b4tqnvchfbqbd::::res://Player.png<>uid://cuaeve0hs3fet::::res://Playersheet.png
+player (Copiar 2).tscn::PackedScene::6350092514571123523::1777723404::0::1::::<><><>0<>0<><>::uid://cuaeve0hs3fet::::res://Playersheet.png
 player (Copiar).tscn::PackedScene::2481558421142035687::1777307245::0::1::::<><><>0<>0<><>::uid://7uq8n1pixx3t::::res://images.png
 player.gd::GDScript::559689032042139886::1777307245::0::1::::<>CharacterBody2D<><>0<>0<><>::
 player.tscn::PackedScene::753175026723952350::1777307245::0::1::::<><><>0<>0<><>::uid://h8d85b2671hi::::res://player.gd<>uid://7uq8n1pixx3t::::res://images.png
