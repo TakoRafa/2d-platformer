@@ -2,6 +2,8 @@
 
 [ext_resource type="PackedScene" uid="uid://dfutklnr8hr6u" path="res://tile_map_layer.tscn" id="1_1d0ta"]
 [ext_resource type="PackedScene" uid="uid://cwqbdi6n6ycx4" path="res://player (Copiar 2).tscn" id="2_fj7yv"]
+[ext_resource type="PackedScene" uid="uid://drhh42ppyietu" path="res://hurt.tscn" id="3_tlwt5"]
+[ext_resource type="PackedScene" uid="uid://dd4ymhre6f7ja" path="res://respawn.tscn" id="4_aqk2v"]
 
 [node name="World" type="Node2D" unique_id=218003336]
 
@@ -11,3 +13,12 @@ tile_map_data = PackedByteArray("AAD6/wAAAQAAAAEAAGD7/wAAAQAAAAEAAGD8/wAAAQAAAAE
 
 [node name="CharacterBody2D2" parent="." unique_id=195148628 instance=ExtResource("2_fj7yv")]
 position = Vector2(40, -224)
+
+[node name="Hurt" parent="." unique_id=640395773 instance=ExtResource("3_tlwt5")]
+position = Vector2(1074, 103)
+
+[node name="Respawn2" parent="." unique_id=698570975 instance=ExtResource("4_aqk2v")]
+position = Vector2(1330, 103)
+
+[node name="Respawn" parent="." unique_id=100671781 instance=ExtResource("4_aqk2v")]
+position = Vector2(562, 103)

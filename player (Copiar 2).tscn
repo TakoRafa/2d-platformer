@@ -14,6 +14,12 @@ const JUMP_SPEED = -450
 var last_dir = 1
 ###CONSTANTS AND GLOBAL VARIABLES###
 
+###DEATH VARIABLES###
+var dead = false
+var respawn_coords
+var respawn_gravity
+###DEATH VARIABLES###
+
 ###JUMP VARIABLES###
 var high_jump = 3
 var low_jump_buffer
@@ -45,11 +51,12 @@ var target_zoom = 1.0
 @onready var camera = $Camera2D
 ###CAMERA VARIABLES###
 
+
 func _ready():
 	initiate_state_machine() #Calls the function to start the state machine
 	camera.zoom = Vector2.ONE * zoom_default
 	target_zoom = zoom_default
-	
+
 
 func initiate_state_machine():
 	statem = LimboHSM.new() #Creates state machine
@@ -63,7 +70,7 @@ func initiate_state_machine():
 	var gravity_switch_state = LimboState.new().named(\"gravity_switch\").call_on_enter(gravity_switch_start).call_on_update(gravity_switch_update)
 	var walk_state = LimboState.new().named(\"walk\").call_on_enter(walk_start).call_on_update(walk_update)
 	var dash_state = LimboState.new().named(\"dash\").call_on_enter(dash_start).call_on_update(dash_update)
-	
+	var death_state = LimboState.new(). named(\"death\").call_on_enter(death_start).call_on_update(death_update)
 	
 	#adds the state to the state machine
 	statem.add_child(idle_state)
@@ -72,6 +79,7 @@ func initiate_state_machine():
 	statem.add_child(gravity_switch_state)
 	statem.add_child(walk_state)
 	statem.add_child(dash_state)
+	statem.add_child(death_state)
 	
 	statem.initial_state = fall_state
 	
@@ -83,14 +91,16 @@ func initiate_state_machine():
 	statem.add_transition(statem.ANYSTATE, jump_state, &\"to_jump\")
 	statem.add_transition(statem.ANYSTATE, gravity_switch_state, &\"to_gravity_switch\")
 	statem.add_transition(statem.ANYSTATE, dash_state, &\"to_dash\")
+	statem.add_transition(statem.ANYSTATE, death_state, &\"to_death\")
 	
 	statem.initialize(self)
 	statem.set_active(true)
 
+
 func idle_start():
 	$AnimatedSprite2D.play(\"IDLE\")
 	dashacc = 1
-	#print(\"idle start\")
+	print(\"idle start\")
 	can_switch_gravity = true
 	can_dash = true
 	
@@ -122,7 +132,6 @@ func jump_start():
 		direction = -1
 	##############Joystick correction#################
 	last_dir = direction
-	
 	
 func jump_update(delta):
 	#print(\"jump update\")
@@ -158,7 +167,7 @@ func jump_update(delta):
 func fall_start():
 	$AnimatedSprite2D.play(\"FALL\")
 	#print(\"fall start\")
-
+	
 func fall_update(delta: float):
 	#print(\"fall update\")
 	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
@@ -179,6 +188,7 @@ func fall_update(delta: float):
 		statem.dispatch(&\"to_idle\")
 	if Input.is_action_just_pressed(\"dash\") and can_dash == true:
 		statem.dispatch(&\"to_dash\")
+
 
 func gravity_switch_start():
 	if $AnimatedSprite2D.flip_v:
@@ -215,10 +225,13 @@ func walk_update(_delta: float):
 func dash_start():
 	$AnimatedSprite2D.play(\"DASH\")
 	$CollisionShape2D.disabled = true
+	$Hurtbox/NormalHurtbox.disabled = true
 	if gravitydir == 1:
 		$DashCollisionNormalGravity.disabled = false
+		$Hurtbox/DashHurtboxNormalGravity.disabled = false
 	else:
 		$DashcollisionChangedGravity.disabled = false
+		$Hurtbox/DashHurtboxChangedGravity.disabled = false
 	#print(\"dash_start\")
 	velocity.x = 0
 	velocity.y = 0
@@ -237,7 +250,6 @@ func dash_start():
 	elif directiony < -0.1:
 		directiony = -1
 	##############Joystick correction###########
-
 	dash_vert_dir = directiony
 	if directionx or directiony:
 		velocity = Vector2(directionx, directiony).normalized() * SPEED * DASH_SPEED
@@ -254,8 +266,11 @@ func dash_update(delta: float):
 		dashing = false
 		dashacc = 1
 		$CollisionShape2D.disabled = false
+		$Hurtbox/NormalHurtbox.disabled = false
 		$DashCollisionNormalGravity.disabled = true
+		$Hurtbox/DashHurtboxNormalGravity.disabled = true
 		$DashcollisionChangedGravity.disabled = true
+		$Hurtbox/DashHurtboxChangedGravity.disabled = true
 		statem.dispatch(&\"to_fall\")
 	if dashtime >0:
 		dashtime -= delta
@@ -264,25 +279,43 @@ func dash_update(delta: float):
 		dashacc = 1.1
 		velocity.y = 0
 		$CollisionShape2D.disabled = false
+		$Hurtbox/NormalHurtbox.disabled = false
 		$DashCollisionNormalGravity.disabled = true
+		$Hurtbox/DashHurtboxNormalGravity.disabled = true
 		$DashcollisionChangedGravity.disabled = true
+		$Hurtbox/DashHurtboxChangedGravity.disabled = true
 		statem.dispatch(&\"to_fall\")
 	move_and_slide()
 	if Input.is_action_just_pressed(\"ui_accept\") and ((is_on_floor() and gravitydir == 1)or(is_on_ceiling() and gravitydir == -1)):
 		dashing = false
 		can_dash = true
 		$CollisionShape2D.disabled = false
+		$Hurtbox/NormalHurtbox.disabled = false
 		$DashcollisionChangedGravity.disabled = true
+		$Hurtbox/DashHurtboxChangedGravity.disabled = true
+		$Hurtbox/DashHurtboxNormalGravity.disabled = true
 		$DashCollisionNormalGravity.disabled = true
 		statem.dispatch(&\"to_jump\")
 
 
+func death_start():
+	print(\"death_start\")
+	velocity = Vector2(0,0)
+	dead = true
+	
+func death_update(_delta):
+	print(\"death_update\")
+	if Input.is_action_just_pressed(\"ui_accept\"):
+		self.global_position = respawn_coords
+		death_reset()
+		statem.dispatch(&\"to_fall\")
 
 
 func _physics_process(delta):
-	print(velocity)
+	#print(velocity)
 	_update_camera(delta)
 	_not_dashing(delta)
+
 
 func _update_camera(delta):
 	var current_speed = velocity.length()
@@ -296,8 +329,9 @@ func _update_camera(delta):
 	var new_zoom = lerpf(camera.zoom.x, target_zoom, zoom_lerp_speed * delta)
 	camera.zoom = Vector2.ONE * new_zoom
 
+
 func _not_dashing(delta):
-	if dashing == false:
+	if (dashing == false) and (dead == false):
 		var direction := Input.get_axis(\"ui_left\", \"ui_right\")
 		##############Joystick correction###########
 		if direction > 0.1:
@@ -322,6 +356,27 @@ func _not_dashing(delta):
 		else:
 			velocity.x = move_toward(velocity.x, 0, SPEED)
 		move_and_slide()
+
+
+func _on_hurtbox_area_entered(_area: Area2D) -> void:
+	statem.dispatch(&\"to_death\")
+
+
+func _on_respawn_area_entered(_area: Area2D) -> void:
+	print(\"Respawn saved\")
+	respawn_coords = self.global_position
+	respawn_gravity = gravitydir
+
+
+func death_reset():
+	can_dash = true
+	dashing = false
+	dashacc = 1
+	high_jump = 3
+	jumping = false
+	gravitydir = respawn_gravity
+	can_switch_gravity = true
+	dead = false
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_nledv"]
@@ -421,11 +476,13 @@ size = Vector2(62, 63)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vjq2c"]
 size = Vector2(62, 55)
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_7huqt"]
+size = Vector2(64, 64)
+
 [node name="Player" type="CharacterBody2D" unique_id=195148628]
 script = SubResource("GDScript_onrkg")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=417401155]
-visible = false
 position = Vector2(32, -32)
 zoom = Vector2(0.75, 0.75)
 process_callback = 0
@@ -435,7 +492,7 @@ position_smoothing_enabled = true
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1285437705]
 position = Vector2(32, -32)
 sprite_frames = SubResource("SpriteFrames_ya17s")
-animation = &"DASH"
+animation = &"IDLE"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1770338314]
 position = Vector2(32, -32)
@@ -452,3 +509,37 @@ position = Vector2(32, -36)
 shape = SubResource("RectangleShape2D_vjq2c")
 disabled = true
 debug_color = Color(0.8690312, 0.00052539527, 0.85406727, 0.41960785)
+
+[node name="Hurtbox" type="Area2D" parent="." unique_id=9156729]
+visible = false
+collision_layer = 2
+collision_mask = 2
+
+[node name="NormalHurtbox" type="CollisionShape2D" parent="Hurtbox" unique_id=1157881868]
+position = Vector2(32, -32)
+shape = SubResource("RectangleShape2D_nledv")
+debug_color = Color(0.9843137, 0, 0, 0.43137255)
+
+[node name="DashHurtboxNormalGravity" type="CollisionShape2D" parent="Hurtbox" unique_id=1091188756]
+position = Vector2(32, -28)
+shape = SubResource("RectangleShape2D_vjq2c")
+disabled = true
+debug_color = Color(0.9843137, 0, 0, 0.41960785)
+
+[node name="DashHurtboxChangedGravity" type="CollisionShape2D" parent="Hurtbox" unique_id=904647801]
+position = Vector2(32, -36)
+shape = SubResource("RectangleShape2D_vjq2c")
+disabled = true
+debug_color = Color(0.9647059, 0, 0, 0.41960785)
+
+[node name="Respawn" type="Area2D" parent="." unique_id=1149473016]
+collision_layer = 4
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Respawn" unique_id=651406302]
+position = Vector2(32, -32)
+shape = SubResource("RectangleShape2D_7huqt")
+debug_color = Color(0, 0.63529414, 0, 0.41960785)
+
+[connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
+[connection signal="area_entered" from="Respawn" to="." method="_on_respawn_area_entered"]

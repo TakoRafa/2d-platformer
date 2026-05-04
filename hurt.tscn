@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://drhh42ppyietu"]
+
+[ext_resource type="Texture2D" uid="uid://do5nnmk0xemo4" path="res://hurt.png" id="1_66qiw"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nv4ma"]
+size = Vector2(64, 64)
+
+[node name="Hurt" type="Area2D" unique_id=183298170]
+collision_layer = 2
+collision_mask = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=855680994]
+position = Vector2(32, -32)
+texture = ExtResource("1_66qiw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=733653573]
+position = Vector2(32, -32)
+shape = SubResource("RectangleShape2D_nv4ma")
+debug_color = Color(0.9882353, 0, 0, 0.41960785)

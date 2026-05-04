@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dd4ymhre6f7ja"]
+
+[ext_resource type="Texture2D" uid="uid://d1h0m31kxlufm" path="res://Respawn.png" id="1_dsqut"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_v4y63"]
+size = Vector2(64, 64)
+
+[node name="Respawn" type="Area2D" unique_id=698570975]
+collision_layer = 4
+collision_mask = 4
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=743147005]
+position = Vector2(32, -32)
+texture = ExtResource("1_dsqut")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=437561610]
+position = Vector2(32, -32)
+shape = SubResource("RectangleShape2D_v4y63")
+debug_color = Color(0, 1, 0, 0.41960785)
