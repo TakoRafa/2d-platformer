@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://cwqbdi6n6ycx4"]
 
-[ext_resource type="Texture2D" uid="uid://cuaeve0hs3fet" path="res://Playersheet.png" id="2_vjq2c"]
+[ext_resource type="Shader" uid="uid://b2f02xhgm8g37" path="res://player (Copiar 2).gdshader" id="1_7huqt"]
+[ext_resource type="Texture2D" uid="uid://4mtfrxugom78" path="res://Playersheet_no_color.png" id="1_vjq2c"]
+[ext_resource type="Texture2D" uid="uid://bdyp51m7mxgy3" path="res://Player2.png" id="2_7huqt"]
 
 [sub_resource type="GDScript" id="GDScript_onrkg"]
 script/source = "extends CharacterBody2D
@@ -56,6 +58,7 @@ func _ready():
 	initiate_state_machine() #Calls the function to start the state machine
 	camera.zoom = Vector2.ONE * zoom_default
 	target_zoom = zoom_default
+	respawn_coords = self.global_position
 
 
 func initiate_state_machine():
@@ -191,10 +194,12 @@ func fall_update(delta: float):
 
 
 func gravity_switch_start():
-	if $AnimatedSprite2D.flip_v:
+	if gravitydir == -1:
 		$AnimatedSprite2D.flip_v = false
+		$AnimatedSprite2D.material.set_shader_parameter(\"active\", false) #Switch color inverso to off
 	else:
 		$AnimatedSprite2D.flip_v = true 
+		$AnimatedSprite2D.material.set_shader_parameter(\"active\", true) #Switch color inverso to on
 	#print(\"gravity switch start\")
 	gravitydir = -gravitydir
 	can_switch_gravity = false
@@ -260,7 +265,7 @@ func dash_start():
 	
 func dash_update(delta: float):
 	#print(\"dash_update\")
-	if is_on_wall() and velocity.y != (SPEED*DASH_SPEED*dash_vert_dir):
+	if is_on_wall() and ((velocity.y != (SPEED*DASH_SPEED*dash_vert_dir)) or (velocity == Vector2(0,0))):
 		velocity.x = 0
 		velocity.y = 0
 		dashing = false
@@ -302,12 +307,14 @@ func death_start():
 	print(\"death_start\")
 	velocity = Vector2(0,0)
 	dead = true
+	$AnimatedSprite2D.play(\"DEATH\")
 	
 func death_update(_delta):
 	print(\"death_update\")
 	if Input.is_action_just_pressed(\"ui_accept\"):
 		self.global_position = respawn_coords
 		death_reset()
+		$AnimatedSprite2D.play(\"FALL\")
 		statem.dispatch(&\"to_fall\")
 
 
@@ -362,9 +369,9 @@ func _on_hurtbox_area_entered(_area: Area2D) -> void:
 	statem.dispatch(&\"to_death\")
 
 
-func _on_respawn_area_entered(_area: Area2D) -> void:
+func _on_respawn_area_entered(area: Area2D) -> void:
 	print(\"Respawn saved\")
-	respawn_coords = self.global_position
+	respawn_coords = area.global_position
 	respawn_gravity = gravitydir
 
 
@@ -377,49 +384,87 @@ func death_reset():
 	gravitydir = respawn_gravity
 	can_switch_gravity = true
 	dead = false
+	if respawn_gravity == 1:
+		$AnimatedSprite2D.flip_v = false
+		$AnimatedSprite2D.material.set_shader_parameter(\"active\", false)
+	else:
+		$AnimatedSprite2D.flip_v = true 
+		$AnimatedSprite2D.material.set_shader_parameter(\"active\", true)
 "
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_nledv"]
-atlas = ExtResource("2_vjq2c")
-region = Rect2(128, 128, 64, 64)
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_mv7aj"]
+shader = ExtResource("1_7huqt")
+shader_parameter/active = false
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_tva5w"]
-atlas = ExtResource("2_vjq2c")
-region = Rect2(128, 64, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_5yck6"]
-atlas = ExtResource("2_vjq2c")
-region = Rect2(0, 128, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_ya17s"]
-atlas = ExtResource("2_vjq2c")
+[sub_resource type="AtlasTexture" id="AtlasTexture_7huqt"]
+atlas = ExtResource("1_vjq2c")
 region = Rect2(64, 128, 64, 64)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_h5634"]
-atlas = ExtResource("2_vjq2c")
-region = Rect2(0, 0, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_ibm8o"]
-atlas = ExtResource("2_vjq2c")
+[sub_resource type="AtlasTexture" id="AtlasTexture_mv7aj"]
+atlas = ExtResource("1_vjq2c")
 region = Rect2(64, 0, 64, 64)
 
+[sub_resource type="AtlasTexture" id="AtlasTexture_tva5w"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(128, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5yck6"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(192, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ya17s"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(0, 192, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h5634"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(64, 192, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ibm8o"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(128, 192, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_pmb7r"]
+atlas = ExtResource("2_7huqt")
+region = Rect2(128, 192, 64, 64)
+
 [sub_resource type="AtlasTexture" id="AtlasTexture_t0l4u"]
-atlas = ExtResource("2_vjq2c")
-region = Rect2(128, 0, 64, 64)
+atlas = ExtResource("1_vjq2c")
+region = Rect2(128, 64, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_mxiih"]
-atlas = ExtResource("2_vjq2c")
+atlas = ExtResource("1_vjq2c")
+region = Rect2(192, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f5ype"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(0, 128, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_au2m8"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0mx68"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a0nur"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gmg6u"]
+atlas = ExtResource("1_vjq2c")
 region = Rect2(0, 64, 64, 64)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_vjq2c"]
-atlas = ExtResource("2_vjq2c")
-region = Rect2(0, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_r87yw"]
+atlas = ExtResource("1_vjq2c")
+region = Rect2(64, 64, 64, 64)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_ya17s"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_nledv")
+"texture": SubResource("AtlasTexture_7huqt")
 }],
 "loop": true,
 "name": &"DASH",
@@ -427,13 +472,39 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_mv7aj")
+}, {
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_tva5w")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_5yck6")
 }, {
-"duration": 100000000.0,
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_ya17s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h5634")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ibm8o")
+}, {
+"duration": 1000.0,
+"texture": SubResource("AtlasTexture_pmb7r")
+}],
+"loop": true,
+"name": &"DEATH",
+"speed": 15.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_t0l4u")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mxiih")
+}, {
+"duration": 1e+16,
+"texture": SubResource("AtlasTexture_f5ype")
 }],
 "loop": true,
 "name": &"FALL",
@@ -441,24 +512,24 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_h5634")
+"texture": SubResource("AtlasTexture_au2m8")
 }],
 "loop": true,
 "name": &"IDLE",
-"speed": 16.0
+"speed": 1.0
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ibm8o")
+"texture": SubResource("AtlasTexture_0mx68")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_t0l4u")
+"texture": SubResource("AtlasTexture_a0nur")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_mxiih")
+"texture": SubResource("AtlasTexture_gmg6u")
 }, {
-"duration": 10000.0,
-"texture": SubResource("AtlasTexture_vjq2c")
+"duration": 10000000000.0,
+"texture": SubResource("AtlasTexture_r87yw")
 }],
 "loop": true,
 "name": &"JUMP",
@@ -483,6 +554,7 @@ size = Vector2(64, 64)
 script = SubResource("GDScript_onrkg")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=417401155]
+visible = false
 position = Vector2(32, -32)
 zoom = Vector2(0.75, 0.75)
 process_callback = 0
@@ -490,21 +562,26 @@ limit_enabled = false
 position_smoothing_enabled = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1285437705]
+modulate = Color(0.28654212, 0.6361681, 1, 1)
+material = SubResource("ShaderMaterial_mv7aj")
 position = Vector2(32, -32)
 sprite_frames = SubResource("SpriteFrames_ya17s")
 animation = &"IDLE"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1770338314]
+visible = false
 position = Vector2(32, -32)
 shape = SubResource("RectangleShape2D_nledv")
 
 [node name="DashCollisionNormalGravity" type="CollisionShape2D" parent="." unique_id=281526594]
+visible = false
 position = Vector2(32, -28)
 shape = SubResource("RectangleShape2D_vjq2c")
 disabled = true
 debug_color = Color(0.8690312, 0.00052539527, 0.85406727, 0.41960785)
 
 [node name="DashcollisionChangedGravity" type="CollisionShape2D" parent="." unique_id=1227348346]
+visible = false
 position = Vector2(32, -36)
 shape = SubResource("RectangleShape2D_vjq2c")
 disabled = true
@@ -533,6 +610,7 @@ disabled = true
 debug_color = Color(0.9647059, 0, 0, 0.41960785)
 
 [node name="Respawn" type="Area2D" parent="." unique_id=1149473016]
+visible = false
 collision_layer = 4
 collision_mask = 4
 
