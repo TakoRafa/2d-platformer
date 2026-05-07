@@ -20,6 +20,10 @@ config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 config/agile_event_flushing=false
 
+[autoload]
+
+Player="*uid://cwqbdi6n6ycx4"
+
 [input]
 
 ui_accept={

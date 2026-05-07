@@ -1,19 +1,3 @@
-//shader_type canvas_item;
-
-//uniform bool active = false;
-
-//void fragment() {
-    // COLOR already includes the texture and the modulate/self_modulate tint
-    //vec4 c = COLOR;
-    
-    //if (active) {
-        // Invert the tinted color
-        //c.rgb = 1.0 - c.rgb;
-    //}
-    
-    // Assign back to COLOR to apply the final result
-    //COLOR = c;
-//}
 shader_type canvas_item;
 
 uniform bool active = false;

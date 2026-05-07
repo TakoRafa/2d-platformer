@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cwqbdi6n6ycx4"]
 
-[ext_resource type="Shader" uid="uid://b2f02xhgm8g37" path="res://player (Copiar 2).gdshader" id="1_7huqt"]
+[ext_resource type="Shader" uid="uid://b2f02xhgm8g37" path="res://Player.gdshader" id="1_7huqt"]
 [ext_resource type="Texture2D" uid="uid://4mtfrxugom78" path="res://Playersheet_no_color.png" id="1_vjq2c"]
 [ext_resource type="Texture2D" uid="uid://bdyp51m7mxgy3" path="res://Player2.png" id="2_7huqt"]
 
@@ -30,7 +30,7 @@ var jumping = false
 ###JUMP VARIABLES###
 
 ###GRAVITY VARIABLES###
-var gravitydir = 1 #direction of gravity 1=downwards, -1=upwards
+@export var gravitydir = 1 #direction of gravity 1=downwards, -1=upwards
 var can_switch_gravity = true
 ###GRAVITY VARIABLES###
 
@@ -59,7 +59,8 @@ func _ready():
 	initiate_state_machine() #Calls the function to start the state machine
 	camera.zoom = Vector2.ONE * zoom_default
 	target_zoom = zoom_default
-	respawn_coords = self.global_position
+	respawn_coords = Vector2(0,0)
+	self.global_position = respawn_coords
 
 
 func initiate_state_machine():
@@ -104,7 +105,7 @@ func initiate_state_machine():
 func idle_start():
 	$AnimatedSprite2D.play(\"IDLE\")
 	dashacc = 1
-	print(\"idle start\")
+	#print(\"idle start\")
 	can_switch_gravity = true
 	can_dash = true
 	
@@ -305,14 +306,14 @@ func dash_update(delta: float):
 
 
 func death_start():
-	print(\"death_start\")
+	#print(\"death_start\")
 	velocity = Vector2(0,0)
 	dead = true
 	$AnimatedSprite2D.play(\"DEATH\")
 	respawn_time = 0.5
 	
 func death_update(delta):
-	print(\"death_update\")
+	#print(\"death_update\")
 	respawn_time -= delta
 	#if Input.is_action_just_pressed(\"ui_accept\"):
 	if respawn_time <0:
@@ -567,11 +568,11 @@ limit_enabled = false
 position_smoothing_enabled = true
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1285437705]
-modulate = Color(0.28654212, 0.6361681, 1, 1)
+modulate = Color(1, 0.6509804, 0.28627452, 1)
 material = SubResource("ShaderMaterial_mv7aj")
 position = Vector2(32, -32)
 sprite_frames = SubResource("SpriteFrames_ya17s")
-animation = &"DASH"
+animation = &"DEATH"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1770338314]
 visible = false
