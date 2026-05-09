@@ -14,14 +14,22 @@ func _process(_delta: float) -> void:
 
 func change_tile() -> void:
 	if Player.gravitydir == 1:
-		# find the "normal" tiles and swap them
+		#Finds a tile and replaces it
 		for cell in get_used_cells_by_id(0, Vector2i(1, 0)):
 			set_cell(cell, 0, Vector2i(2, 0))
 		for cell in get_used_cells_by_id(0, Vector2i(1, 1)):
 			set_cell(cell, 0, Vector2i(0, 1))
+		for cell in get_used_cells_by_id(0, Vector2i(0, 2)):
+			set_cell(cell, 0, Vector2i(1, 2))
+		for cell in get_used_cells_by_id(0, Vector2i(0, 3)):
+			set_cell(cell, 0, Vector2i(2, 2))
 	else:
-		# find the "swapped" tiles and revert them
+		#Finds a tile and replaces it
 		for cell in get_used_cells_by_id(0, Vector2i(2, 0)):
 			set_cell(cell, 0, Vector2i(1, 0))
 		for cell in get_used_cells_by_id(0, Vector2i(0, 1)):
 			set_cell(cell, 0, Vector2i(1, 1))
+		for cell in get_used_cells_by_id(0, Vector2i(1, 2)):
+			set_cell(cell, 0, Vector2i(0, 2))
+		for cell in get_used_cells_by_id(0, Vector2i(2, 2)):
+			set_cell(cell, 0, Vector2i(0, 3))

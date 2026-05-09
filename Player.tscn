@@ -59,8 +59,8 @@ func _ready():
 	initiate_state_machine() #Calls the function to start the state machine
 	camera.zoom = Vector2.ONE * zoom_default
 	target_zoom = zoom_default
-	respawn_coords = Vector2(0,0)
-	self.global_position = respawn_coords
+	global_position = global_position + Vector2(32,-32)
+	
 
 
 func initiate_state_machine():
@@ -317,7 +317,8 @@ func death_update(delta):
 	respawn_time -= delta
 	#if Input.is_action_just_pressed(\"ui_accept\"):
 	if respawn_time <0:
-		self.global_position = respawn_coords
+		# when respawning:
+		global_position = respawn_coords
 		death_reset()
 		$AnimatedSprite2D.play(\"FALL\")
 		statem.dispatch(&\"to_fall\")
@@ -372,16 +373,6 @@ func _not_dashing(delta):
 		move_and_slide()
 
 
-func _on_hurtbox_area_entered(_area: Area2D) -> void:
-	statem.dispatch(&\"to_death\")
-
-
-func _on_respawn_area_entered(area: Area2D) -> void:
-	print(\"Respawn saved\")
-	respawn_coords = area.global_position
-	respawn_gravity = gravitydir
-
-
 func death_reset():
 	can_dash = true
 	dashing = false
@@ -397,6 +388,19 @@ func death_reset():
 	else:
 		$AnimatedSprite2D.flip_v = true 
 		$AnimatedSprite2D.material.set_shader_parameter(\"active\", true)
+
+
+@warning_ignore(\"unused_parameter\")
+func _on_hurtbox_body_entered(_body: TileMapLayer) -> void:
+	statem.dispatch(&\"to_death\")
+
+
+func _on_respawn_body_entered(body: TileMapLayer) -> void:
+	print(\"Respawn saved\")
+	respawn_gravity = gravitydir
+	respawn_coords = body.to_global(body.map_to_local(body.local_to_map(body.to_local(global_position))))
+	#respawn_coords -=  Vector2(30, 30)
+	print(respawn_coords)
 "
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_mv7aj"]
@@ -555,13 +559,13 @@ size = Vector2(62, 63)
 size = Vector2(62, 55)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7huqt"]
-size = Vector2(64, 64)
+size = Vector2(48, 48)
 
 [node name="Player" type="CharacterBody2D" unique_id=195148628]
 script = SubResource("GDScript_onrkg")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=417401155]
-position = Vector2(32, -32)
+visible = false
 zoom = Vector2(0.75, 0.75)
 process_callback = 0
 limit_enabled = false
@@ -570,25 +574,23 @@ position_smoothing_enabled = true
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1285437705]
 modulate = Color(1, 0.6509804, 0.28627452, 1)
 material = SubResource("ShaderMaterial_mv7aj")
-position = Vector2(32, -32)
 sprite_frames = SubResource("SpriteFrames_ya17s")
 animation = &"DEATH"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1770338314]
 visible = false
-position = Vector2(32, -32)
 shape = SubResource("RectangleShape2D_nledv")
 
 [node name="DashCollisionNormalGravity" type="CollisionShape2D" parent="." unique_id=281526594]
 visible = false
-position = Vector2(32, -28)
+position = Vector2(0, 4)
 shape = SubResource("RectangleShape2D_vjq2c")
 disabled = true
 debug_color = Color(0.8690312, 0.00052539527, 0.85406727, 0.41960785)
 
 [node name="DashcollisionChangedGravity" type="CollisionShape2D" parent="." unique_id=1227348346]
 visible = false
-position = Vector2(32, -36)
+position = Vector2(0, -4)
 shape = SubResource("RectangleShape2D_vjq2c")
 disabled = true
 debug_color = Color(0.8690312, 0.00052539527, 0.85406727, 0.41960785)
@@ -599,32 +601,28 @@ collision_layer = 2
 collision_mask = 2
 
 [node name="NormalHurtbox" type="CollisionShape2D" parent="Hurtbox" unique_id=1157881868]
-position = Vector2(32, -32)
 shape = SubResource("RectangleShape2D_nledv")
 debug_color = Color(0.9843137, 0, 0, 0.43137255)
 
 [node name="DashHurtboxNormalGravity" type="CollisionShape2D" parent="Hurtbox" unique_id=1091188756]
-position = Vector2(32, -28)
+position = Vector2(0, 4)
 shape = SubResource("RectangleShape2D_vjq2c")
 disabled = true
 debug_color = Color(0.9843137, 0, 0, 0.41960785)
 
 [node name="DashHurtboxChangedGravity" type="CollisionShape2D" parent="Hurtbox" unique_id=904647801]
-position = Vector2(32, -36)
+position = Vector2(0, -4)
 shape = SubResource("RectangleShape2D_vjq2c")
 disabled = true
 debug_color = Color(0.9647059, 0, 0, 0.41960785)
 
 [node name="Respawn" type="Area2D" parent="." unique_id=1149473016]
-visible = false
 collision_layer = 4
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Respawn" unique_id=651406302]
-visible = false
-position = Vector2(32, -32)
 shape = SubResource("RectangleShape2D_7huqt")
 debug_color = Color(0, 0.63529414, 0, 0.41960785)
 
-[connection signal="area_entered" from="Hurtbox" to="." method="_on_hurtbox_area_entered"]
-[connection signal="area_entered" from="Respawn" to="." method="_on_respawn_area_entered"]
+[connection signal="body_entered" from="Hurtbox" to="." method="_on_hurtbox_body_entered"]
+[connection signal="body_entered" from="Respawn" to="." method="_on_respawn_body_entered"]
