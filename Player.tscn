@@ -171,7 +171,7 @@ func jump_update(delta):
 
 func fall_start():
 	$AnimatedSprite2D.play(\"FALL\")
-	#print(\"fall start\")
+	print(\"fall start\")
 	
 func fall_update(delta: float):
 	#print(\"fall update\")
@@ -212,8 +212,9 @@ func gravity_switch_update(_delta: float):
 
 
 func walk_start():
-	$AnimatedSprite2D.play(\"WALK\")
-	#print(\"walk start\")
+	#pass
+	#$AnimatedSprite2D.play(\"WALK\")
+	print(\"walk start\")
 	
 func walk_update(_delta: float):
 	#print(\"walk update\")
@@ -553,10 +554,10 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_nledv"]
-size = Vector2(62, 63)
+size = Vector2(58, 64)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_vjq2c"]
-size = Vector2(62, 55)
+size = Vector2(56, 56)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7huqt"]
 size = Vector2(48, 48)
@@ -565,7 +566,6 @@ size = Vector2(48, 48)
 script = SubResource("GDScript_onrkg")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=417401155]
-visible = false
 zoom = Vector2(0.75, 0.75)
 process_callback = 0
 limit_enabled = false
@@ -575,7 +575,7 @@ position_smoothing_enabled = true
 modulate = Color(1, 0.6509804, 0.28627452, 1)
 material = SubResource("ShaderMaterial_mv7aj")
 sprite_frames = SubResource("SpriteFrames_ya17s")
-animation = &"DEATH"
+animation = &"IDLE"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1770338314]
 visible = false
@@ -617,6 +617,7 @@ disabled = true
 debug_color = Color(0.9647059, 0, 0, 0.41960785)
 
 [node name="Respawn" type="Area2D" parent="." unique_id=1149473016]
+visible = false
 collision_layer = 4
 collision_mask = 4
 
